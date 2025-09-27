@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Delivery Address - STP Puja Bazaar</title>
+  <link href="https://fonts.googleapis.com/css?family=Inter:400,600,700" rel="stylesheet" />
+  <style>
+    body { font-family: Inter,sans-serif; max-width: 450px; margin: 30px auto; background:#fdfdfd; padding: 0 12px; }
+    h2 { color: #1653f5; font-weight: 900; }
+    label { display: block; margin: 15px 0 8px; font-weight: 700; font-size: 15px; }
+    input, select, textarea { width: 100%; padding: 10px; border-radius: 8px; border: 1.6px solid #aaa; font-size: 15px; }
+    button {
+      margin-top: 22px; width: 100%; background: var(--primary, #1e7b32);
+      border: none; border-radius: 15px; padding: 15px;
+      font-weight: 900; font-size: 18px; color: white;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #134713;
+    }
+    #map {
+      margin-top: 18px;
+      height: 180px; 
+      border-radius: 14px;
+      border: 1.5px solid #ccc;
+      width: 100%;
+    }
+  </style>
+</head>
+<body>
+  <h2>Enter Delivery Address</h2>
+  <form id="addressForm" autocomplete="off">
+    <label>Full Name</label>
+    <input type="text" id="name" required />
+    <label>Phone Number</label>
+    <input type="tel" id="phone" required pattern="[0-9]{10,}" />
+    <label>Delivery Address</label>
+    <input type="text" id="address" placeholder="Type your address here" autocomplete="off" required />
+    <div id="map"></div>
+    <input type="hidden" id="latlng" />
+    <button type="submit">Next: Payment</button>
+  </form>
+
+  <script src="https://maps.googleapis.com/maps/api/js?key=YOUR_GOOGLE_MAPS_API_KEY&libraries=places"></script>
+  <script>
+    let map, marker, autocomplete;
+    function initMap() {
+      const defaultCenter = {lat: 28.6139, lng: 77.209};
+      map = new google.maps.Map(document.getElementById('map'), { center: defaultCenter, zoom: 11 });
+      marker = new google.maps.Marker({position: defaultCenter, map: map, draggable: true});
+      autocomplete = new google.maps.places.Autocomplete(document.getElementById('address'), {componentRestrictions: {country: "IN"}});
+      autocomplete.bindTo('bounds', map);
+      
+      autocomplete.addListener('place_changed', () => {
+        const place = autocomplete.getPlace();
+        if (!place.geometry) return alert('Place not found');
+        map.setCenter(place.geometry.location);
+        map.setZoom(15);
+        marker.setPosition(place.geometry.location);
+        document.getElementById('latlng').value = place.geometry.location.lat() + "," + place.geometry.location.lng();
+      });
+      
+      marker.addListener('dragend', () => {
+        const pos = marker.getPosition();
+        document.getElementById('latlng').value = pos.lat() + "," + pos.lng();
+      });
+    }
+    window.onload = () => initMap();
+
+    document.getElementById('addressForm').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const name = document.getElementById('name').value.trim();
+      const phone = document.getElementById('phone').value.trim();
+      const address = document.getElementById('address').value.trim();
+      const latlng = document.getElementById('latlng').value;
+
+      if (!name || !phone || !address) {
+        alert('Please fill all required fields.');
+        return;
+      }
+
+      const buyerInfo = {name, phone, address, latlng};
+      localStorage.setItem('buyerInfo', JSON.stringify(buyerInfo));
+      // Navigate to payment page
+      window.location.href = 'buy_payment.html';
+    });
+  </script>
+</body>
+</html>
